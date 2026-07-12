@@ -23,7 +23,9 @@ const ALLOWED_EMAILS = [
 
 /**
  * Verify the Google ID token and check if user is allowed
- * Decodes JWT locally - no external HTTP call needed
+ * Calls Google's tokeninfo endpoint for cryptographic verification
+ * 
+ * FIRST-TIME SETUP: Run authorize() once to grant UrlFetchApp permission
  */
 function verifyAuth(token) {
   if (!token) {
@@ -31,25 +33,10 @@ function verifyAuth(token) {
   }
   
   try {
-    // Decode JWT payload (base64url → JSON)
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      return { authorized: false, error: 'Invalid token format' };
-    }
-    
-    // Decode base64url
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const payload = JSON.parse(Utilities.newBlob(Utilities.base64Decode(base64)).getDataAsString());
-    
-    // Check expiry
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      return { authorized: false, error: 'Token expired' };
-    }
-    
-    // Check issuer (must be Google)
-    if (payload.iss !== 'accounts.google.com' && payload.iss !== 'https://accounts.google.com') {
-      return { authorized: false, error: 'Invalid token issuer' };
-    }
+    const tokenInfo = UrlFetchApp.fetch(
+      'https://oauth2.googleapis.com/tokeninfo?id_token=' + token
+    );
+    const payload = JSON.parse(tokenInfo.getContentText());
     
     if (!payload.email) {
       return { authorized: false, error: 'Invalid token - no email' };
@@ -75,6 +62,14 @@ function verifyAuth(token) {
   } catch (e) {
     return { authorized: false, error: 'Token verification failed: ' + e.message };
   }
+}
+
+/**
+ * Run this ONCE from the editor to grant UrlFetchApp permission.
+ * Delete after running.
+ */
+function authorize() {
+  UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=test');
 }
 
 /**
