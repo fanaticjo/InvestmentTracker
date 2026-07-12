@@ -19,8 +19,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        scope: '/InvestmentTracker/',
+        start_url: '/InvestmentTracker/',
         icons: [
           {
             src: 'pwa-192x192.png',
