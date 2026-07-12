@@ -5,7 +5,7 @@
  * paste your deployment URL below.
  */
 
-export const API_URL = 'https://script.google.com/macros/s/AKfycbyT38-F0JE1WZoXGDHUueTgbgGXMN0WGCfaRVG1xWCDK_5Yx4aGnQhOCJlTDObV1pFGYg/exec';
+export const API_URL = import.meta.env.VITE_API_URL || 'https://script.google.com/macros/s/AKfycbyT38-F0JE1WZoXGDHUueTgbgGXMN0WGCfaRVG1xWCDK_5Yx4aGnQhOCJlTDObV1pFGYg/exec';
 
 // Paste your URL like:
 // export const API_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
