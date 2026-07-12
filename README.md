@@ -1,6 +1,8 @@
 # 💰 Investment & Expense Tracker
 
-A Google Apps Script-based personal finance tracker that runs inside Google Sheets.
+A personal finance tracker with Google Sheets as the database and a mobile PWA for on-the-go updates.
+
+![Google Sheets](https://img.shields.io/badge/Backend-Google%20Sheets-green) ![React](https://img.shields.io/badge/Frontend-React%20PWA-blue) ![Auth](https://img.shields.io/badge/Auth-Google%20Sign--In-yellow)
 
 ## Features
 
@@ -10,17 +12,28 @@ A Google Apps Script-based personal finance tracker that runs inside Google Shee
 - **Monthly Summary** — Income vs expenses, net worth snapshot, category breakdown
 - **Daily Dashboard** — Today's spend, 7-day trend, budget vs actual with 🟢/🟡/🔴 status
 - **Budget Alerts** — Customizable per-category monthly budgets with overspend warnings
-- **Quick-Add Dialogs** — Add expenses and stocks via popup forms from the menu
+- **Mobile PWA** — iPhone/Android app with Google Sign-In, offline support, and instant sync
+- **Secure** — Google OAuth authentication, only your email can access
 
-## Setup
+## 📱 Mobile App (PWA)
 
-1. Open your Google Sheet
-2. Go to **Extensions → Apps Script**
-3. Delete the default `Code.gs` content
-4. Copy-paste all `.gs` files into the editor (create separate files using `+` or paste all into one)
-5. Run `setupAll` from the function dropdown
-6. Grant permissions when prompted
-7. Use the **"💰 Finance Tracker"** menu that appears in your sheet
+A React Progressive Web App that lets you add expenses, stocks, and SIPs from your phone. Data syncs directly to your Google Sheet.
+
+- Works offline (queues entries, syncs when online)
+- Installs on iPhone/Android home screen
+- Google Sign-In for security
+- Bottom tab navigation optimized for one-handed use
+
+## 🚀 Quick Start
+
+For complete setup and deployment instructions, see **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+
+**TL;DR:**
+1. Set up Google Sheets with Apps Script (`.gs` files)
+2. Create Google OAuth credentials
+3. Configure `.env` with your API URL and Client ID
+4. `npm run deploy` to publish to GitHub Pages
+5. Open on iPhone → Add to Home Screen
 
 ## File Structure
 
