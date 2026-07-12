@@ -24,6 +24,13 @@ A React Progressive Web App that lets you add expenses, stocks, and SIPs from yo
 - Google Sign-In for security
 - Bottom tab navigation optimized for one-handed use
 
+## 📸 Screenshots
+
+| Add Expense | Stock/SIP | Dashboard |
+|:-----------:|:---------:|:---------:|
+| ![Expense](appScreenshot/expense.png) | ![Stock & SIP](appScreenshot/stockandsip.png) | ![Dashboard](appScreenshot/summary.png) |
+| Quick-add with category chips, payment mode selection, and preset amounts | Add stocks with NSE symbol (live prices) or SIP mutual funds | Today's spend, monthly breakdown by category, and recent entries |
+
 ## 🚀 Quick Start
 
 For complete setup and deployment instructions, see **[DEPLOYMENT.md](DEPLOYMENT.md)**.
