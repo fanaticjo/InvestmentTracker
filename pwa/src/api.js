@@ -131,8 +131,17 @@ async function apiGet(action, params = {}) {
   const response = await fetch(url.toString(), { redirect: 'follow' });
   const text = await response.text();
   try {
-    return JSON.parse(text);
-  } catch {
+    const result = JSON.parse(text);
+    // If unauthorized, clear session and reload
+    if (result.error === 'Unauthorized') {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      window.location.reload();
+      throw new Error('Session expired. Please sign in again.');
+    }
+    return result;
+  } catch (e) {
+    if (e.message.includes('Session expired')) throw e;
     throw new Error('Invalid response from server');
   }
 }

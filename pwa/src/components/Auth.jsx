@@ -11,10 +11,23 @@ function Auth({ onLogin, children }) {
     const savedToken = localStorage.getItem('auth_token');
     const savedUser = localStorage.getItem('auth_user');
     if (savedToken && savedUser) {
-      setUser(JSON.parse(savedUser));
-      onLogin(savedToken);
-      setLoading(false);
-      return;
+      // Check if token is expired
+      try {
+        const payload = JSON.parse(atob(savedToken.split('.')[1]));
+        const expiry = payload.exp * 1000; // convert to ms
+        if (Date.now() < expiry) {
+          // Token still valid
+          setUser(JSON.parse(savedUser));
+          onLogin(savedToken);
+          setLoading(false);
+          return;
+        }
+      } catch (e) {
+        // Invalid token, clear it
+      }
+      // Token expired, clear and re-auth
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
     }
 
     // Load Google Sign-In script
