@@ -2,27 +2,58 @@
 
 ## LinkedIn
 
-> **I built a free expense & investment tracker because every finance app either wants ₹499/month or my data.**
+> Every personal finance app seemed to want one of two things:
 >
-> The problem: I track my daily expenses, SIPs, and stocks. Tried multiple apps — some wanted subscriptions, others had ads everywhere, and most needed access to my SMS/bank accounts.
+> 💰 ₹499/month
+> 📱 Access to my personal financial data
 >
-> So I built my own over a weekend:
-> - 📊 Google Sheets as the database (you own your data, forever)
-> - 📱 A PWA that works like a native app on iPhone/Android
-> - 🔐 Google Sign-In (only you can access)
-> - 📈 Live stock prices via GOOGLEFINANCE
-> - 💸 Quick-add expenses in 5 seconds
-> - 🔄 Works offline, syncs when online
+> I wanted neither.
 >
-> No server costs. No subscriptions. No ads. Just you and your spreadsheet.
+> I just needed a simple way to track:
 >
-> It's open-source — clone it, deploy it in 15 minutes, and you have your own personal finance app that nobody else can access.
+> * 💸 Daily expenses
+> * 📈 SIPs & stock investments
+> * 📊 My overall portfolio
+>
+> After trying multiple apps, I kept running into the same issues:
+> ❌ Expensive subscriptions
+> ❌ Ads everywhere
+> ❌ SMS and bank account permissions
+> ❌ My data stored on someone else's servers
+>
+> So I built my own over a weekend.
+>
+> ### What it does
+>
+> ✅ Uses **Google Sheets** as the database — your data stays in your own Google account.
+>
+> ✅ Installs as a **Progressive Web App (PWA)** on iPhone and Android.
+>
+> ✅ Secure **Google Sign-In** so only you can access your data.
+>
+> ✅ Live stock prices with **GOOGLEFINANCE**.
+>
+> ✅ Add expenses in under 5 seconds.
+>
+> ✅ Offline-first — works without internet and syncs automatically when you're back online.
+>
+> ### The best part?
+>
+> 🚀 No backend to maintain.
+> 💸 No server costs.
+> 📢 No ads.
+> 🔒 No subscriptions.
+> 📂 You own your data. Always.
+>
+> I decided to open-source it so anyone can self-host, customize it, or contribute.
 >
 > 🔗 GitHub: https://github.com/fanaticjo/InvestmentTracker
 >
-> If you're tired of overpaying for basic expense tracking, give it a try. PRs welcome.
+> You can clone it, deploy it in about 15 minutes, and have your own private expense & investment tracker.
 >
-> #opensource #personalfinance #reactjs #googlesheets #pwa #sideproject
+> If you've built something cool with it—or have ideas to improve it—I'd love to hear your feedback. PRs and contributions are always welcome!
+>
+> #OpenSource #PersonalFinance #ReactJS #GoogleSheets #PWA #SideProject #WebDevelopment #Finance #BuildInPublic
 
 ---
 
