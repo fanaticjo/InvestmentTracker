@@ -118,21 +118,30 @@ function doPost(e) {
 function addExpenseAPI(data) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(CONFIG.sheets.expenses);
-  const lastRow = sheet.getLastRow() + 1;
+  
+  // Find first empty row (skip header at row 1)
+  const colA = sheet.getRange('A2:A').getValues();
+  let insertRow = 2;
+  for (let i = 0; i < colA.length; i++) {
+    if (colA[i][0] === '' || colA[i][0] === null) {
+      insertRow = i + 2;
+      break;
+    }
+  }
   
   const date = new Date(data.date);
-  sheet.getRange(lastRow, 1).setValue(date);
-  sheet.getRange(lastRow, 2).setValue(data.category);
-  sheet.getRange(lastRow, 3).setValue(data.description);
-  sheet.getRange(lastRow, 4).setValue(data.paymentMode);
-  sheet.getRange(lastRow, 5).setValue(parseFloat(data.amount));
-  sheet.getRange(lastRow, 6).setValue(data.notes || '');
-  sheet.getRange(lastRow, 7).setFormula(`=IF(A${lastRow}="","",TEXT(A${lastRow},"MMM-YYYY"))`);
+  sheet.getRange(insertRow, 1).setValue(date);
+  sheet.getRange(insertRow, 2).setValue(data.category);
+  sheet.getRange(insertRow, 3).setValue(data.description);
+  sheet.getRange(insertRow, 4).setValue(data.paymentMode);
+  sheet.getRange(insertRow, 5).setValue(parseFloat(data.amount));
+  sheet.getRange(insertRow, 6).setValue(data.notes || '');
+  sheet.getRange(insertRow, 7).setFormula(`=IF(A${insertRow}="","",TEXT(A${insertRow},"MMM-YYYY"))`);
   
   return { 
     success: true, 
     message: `Expense ₹${data.amount} added for ${data.category}`,
-    row: lastRow
+    row: insertRow
   };
 }
 
@@ -162,12 +171,16 @@ function addStockAPI(data) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(CONFIG.sheets.stocks);
   
-  // Find the PORTFOLIO TOTAL row and insert before it
-  const dataRange = sheet.getDataRange().getValues();
-  let insertRow = sheet.getLastRow() + 1;
-  for (let i = 0; i < dataRange.length; i++) {
-    if (dataRange[i][0] === 'PORTFOLIO TOTAL') {
-      insertRow = i + 1; // Insert before TOTAL row
+  // Find first empty row (skip header at row 1)
+  const colA = sheet.getRange('A2:A').getValues();
+  let insertRow = 2;
+  for (let i = 0; i < colA.length; i++) {
+    if (colA[i][0] === '' || colA[i][0] === null) {
+      insertRow = i + 2;
+      break;
+    }
+    if (colA[i][0] === 'PORTFOLIO TOTAL') {
+      insertRow = i + 2;
       sheet.insertRowBefore(insertRow);
       break;
     }
@@ -195,12 +208,17 @@ function addSIPAPI(data) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(CONFIG.sheets.sip);
   
-  // Find the TOTAL row and insert before it
-  const dataRange = sheet.getDataRange().getValues();
-  let insertRow = sheet.getLastRow() + 1;
-  for (let i = 0; i < dataRange.length; i++) {
-    if (dataRange[i][0] === 'TOTAL') {
-      insertRow = i + 1; // Insert before TOTAL row
+  // Find first empty row (skip header at row 1)
+  const colA = sheet.getRange('A2:A').getValues();
+  let insertRow = 2; // default to row 2 (first data row)
+  for (let i = 0; i < colA.length; i++) {
+    if (colA[i][0] === '' || colA[i][0] === null) {
+      insertRow = i + 2;
+      break;
+    }
+    if (colA[i][0] === 'TOTAL') {
+      // All rows full, insert before TOTAL
+      insertRow = i + 2;
       sheet.insertRowBefore(insertRow);
       break;
     }
