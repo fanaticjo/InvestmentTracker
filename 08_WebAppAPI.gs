@@ -23,6 +23,7 @@ const ALLOWED_EMAILS = [
 
 /**
  * Verify the Google ID token and check if user is allowed
+ * Decodes JWT locally - no external HTTP call needed
  */
 function verifyAuth(token) {
   if (!token) {
@@ -30,16 +31,43 @@ function verifyAuth(token) {
   }
   
   try {
-    const tokenInfo = UrlFetchApp.fetch(
-      'https://oauth2.googleapis.com/tokeninfo?id_token=' + token
-    );
-    const payload = JSON.parse(tokenInfo.getContentText());
+    // Decode JWT payload (base64url → JSON)
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return { authorized: false, error: 'Invalid token format' };
+    }
+    
+    // Decode base64url
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(Utilities.newBlob(Utilities.base64Decode(base64)).getDataAsString());
+    
+    // Check expiry
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      return { authorized: false, error: 'Token expired' };
+    }
+    
+    // Check issuer (must be Google)
+    if (payload.iss !== 'accounts.google.com' && payload.iss !== 'https://accounts.google.com') {
+      return { authorized: false, error: 'Invalid token issuer' };
+    }
     
     if (!payload.email) {
       return { authorized: false, error: 'Invalid token - no email' };
     }
     
-    if (!ALLOWED_EMAILS.includes(payload.email.toLowerCase())) {
+    // Normalize Gmail (remove dots before @, lowercase)
+    const normalizeEmail = (email) => {
+      const parts = email.toLowerCase().split('@');
+      if (parts[1] === 'gmail.com') {
+        return parts[0].replace(/\./g, '') + '@' + parts[1];
+      }
+      return email.toLowerCase();
+    };
+    
+    const tokenEmail = normalizeEmail(payload.email);
+    const isAllowed = ALLOWED_EMAILS.some(e => normalizeEmail(e) === tokenEmail);
+    
+    if (!isAllowed) {
       return { authorized: false, error: 'Unauthorized email: ' + payload.email };
     }
     
