@@ -1,0 +1,25 @@
+<!-- Open this file in a browser to generate PWA icons -->
+<canvas id="c192" width="192" height="192"></canvas>
+<canvas id="c512" width="512" height="512"></canvas>
+<script>
+function drawIcon(canvas, size) {
+  const ctx = canvas.getContext('2d');
+  // Blue background with rounded corners
+  ctx.fillStyle = '#1a73e8';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, size, size, size * 0.15);
+  ctx.fill();
+  // Money emoji text
+  ctx.font = `${size * 0.5}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('💰', size/2, size/2);
+  // Download link
+  const link = document.createElement('a');
+  link.download = `pwa-${size}x${size}.png`;
+  link.href = canvas.toDataURL();
+  link.click();
+}
+drawIcon(document.getElementById('c192'), 192);
+drawIcon(document.getElementById('c512'), 512);
+</script>
