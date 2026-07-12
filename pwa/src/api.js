@@ -2,10 +2,16 @@ import { API_URL } from './config';
 
 /**
  * API Service - handles communication with Google Apps Script
- * Includes offline queue for when network is unavailable
+ * Includes offline queue and auth token management
  */
 
 const OFFLINE_QUEUE_KEY = 'offlineExpenseQueue';
+let authToken = localStorage.getItem('auth_token') || null;
+
+// ===== AUTH =====
+export function setAuthToken(token) {
+  authToken = token;
+}
 
 // ===== POST (Write) =====
 export async function addExpense(expense) {
@@ -87,7 +93,7 @@ async function apiPost(payload) {
       method: 'POST',
       redirect: 'follow',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ ...payload, token: authToken })
     });
 
     const text = await response.text();
@@ -102,6 +108,7 @@ async function apiPost(payload) {
       const url = new URL(API_URL);
       url.searchParams.append('action', payload.action);
       url.searchParams.append('data', JSON.stringify(payload));
+      url.searchParams.append('token', authToken);
       const response = await fetch(url.toString(), { redirect: 'follow' });
       const text = await response.text();
       return JSON.parse(text);
@@ -118,6 +125,7 @@ async function apiPost(payload) {
 async function apiGet(action, params = {}) {
   const url = new URL(API_URL);
   url.searchParams.append('action', action);
+  url.searchParams.append('token', authToken);
   Object.entries(params).forEach(([key, val]) => url.searchParams.append(key, val));
 
   const response = await fetch(url.toString(), { redirect: 'follow' });

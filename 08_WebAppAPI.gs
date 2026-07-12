@@ -15,12 +15,55 @@
  * =====================================================
  */
 
+// ===== AUTH CONFIG =====
+const ALLOWED_EMAILS = [
+  'mohapatrabiswajit744@gmail.com'
+  // Add more emails here if you want to share access
+];
+
+/**
+ * Verify the Google ID token and check if user is allowed
+ */
+function verifyAuth(token) {
+  if (!token) {
+    return { authorized: false, error: 'No auth token provided' };
+  }
+  
+  try {
+    const tokenInfo = UrlFetchApp.fetch(
+      'https://oauth2.googleapis.com/tokeninfo?id_token=' + token
+    );
+    const payload = JSON.parse(tokenInfo.getContentText());
+    
+    if (!payload.email) {
+      return { authorized: false, error: 'Invalid token - no email' };
+    }
+    
+    if (!ALLOWED_EMAILS.includes(payload.email.toLowerCase())) {
+      return { authorized: false, error: 'Unauthorized email: ' + payload.email };
+    }
+    
+    return { authorized: true, email: payload.email };
+  } catch (e) {
+    return { authorized: false, error: 'Token verification failed: ' + e.message };
+  }
+}
+
 /**
  * Handle GET requests - Read and Write data
- * Write operations use ?action=addExpense&data={JSON} to avoid CORS issues
  */
 function doGet(e) {
   const action = e.parameter.action;
+  const token = e.parameter.token;
+  
+  // Verify auth
+  const auth = verifyAuth(token);
+  if (!auth.authorized) {
+    return ContentService.createTextOutput(JSON.stringify({ 
+      error: 'Unauthorized', 
+      details: auth.error 
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
   
   try {
     let result;
@@ -84,6 +127,17 @@ function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
     const action = data.action;
+    const token = data.token;
+    
+    // Verify auth
+    const auth = verifyAuth(token);
+    if (!auth.authorized) {
+      return ContentService.createTextOutput(JSON.stringify({ 
+        error: 'Unauthorized', 
+        details: auth.error 
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
     let result;
     
     switch (action) {
