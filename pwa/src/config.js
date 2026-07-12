@@ -5,7 +5,7 @@
  * paste your deployment URL below.
  */
 
-export const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+export const API_URL = 'https://script.google.com/macros/s/AKfycbyT38-F0JE1WZoXGDHUueTgbgGXMN0WGCfaRVG1xWCDK_5Yx4aGnQhOCJlTDObV1pFGYg/exec';
 
 // Paste your URL like:
 // export const API_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
