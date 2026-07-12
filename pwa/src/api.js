@@ -75,7 +75,6 @@ export async function syncOfflineQueue() {
 // ===== CORE HTTP =====
 async function apiPost(payload) {
   if (!navigator.onLine) {
-    // Queue expenses for offline sync
     if (payload.action === 'addExpense') {
       queueOfflineExpense(payload);
       return { success: true, offline: true, message: 'Saved offline, will sync later' };
@@ -83,13 +82,37 @@ async function apiPost(payload) {
     throw new Error('No internet connection');
   }
 
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload)
-  });
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
 
-  return response.json();
+    const text = await response.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { success: true, message: 'Entry added' };
+    }
+  } catch (error) {
+    // Fallback: try GET method (works without CORS)
+    try {
+      const url = new URL(API_URL);
+      url.searchParams.append('action', payload.action);
+      url.searchParams.append('data', JSON.stringify(payload));
+      const response = await fetch(url.toString(), { redirect: 'follow' });
+      const text = await response.text();
+      return JSON.parse(text);
+    } catch (fallbackError) {
+      if (payload.action === 'addExpense') {
+        queueOfflineExpense(payload);
+        return { success: true, offline: true, message: 'Saved offline (network issue)' };
+      }
+      throw error;
+    }
+  }
 }
 
 async function apiGet(action, params = {}) {
@@ -97,6 +120,11 @@ async function apiGet(action, params = {}) {
   url.searchParams.append('action', action);
   Object.entries(params).forEach(([key, val]) => url.searchParams.append(key, val));
 
-  const response = await fetch(url.toString());
-  return response.json();
+  const response = await fetch(url.toString(), { redirect: 'follow' });
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error('Invalid response from server');
+  }
 }

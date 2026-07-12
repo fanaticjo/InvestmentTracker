@@ -16,7 +16,8 @@
  */
 
 /**
- * Handle GET requests - Read data
+ * Handle GET requests - Read and Write data
+ * Write operations use ?action=addExpense&data={JSON} to avoid CORS issues
  */
 function doGet(e) {
   const action = e.parameter.action;
@@ -24,24 +25,46 @@ function doGet(e) {
   try {
     let result;
     
-    switch (action) {
-      case 'getExpenses':
-        result = getRecentExpenses(e.parameter.days || 7);
-        break;
-      case 'getSummary':
-        result = getDailySummary();
-        break;
-      case 'getCategories':
-        result = { categories: CONFIG.categories, paymentModes: CONFIG.paymentModes };
-        break;
-      case 'getStocks':
-        result = getStockPortfolio();
-        break;
-      case 'getSIPs':
-        result = getSIPData();
-        break;
-      default:
-        result = { error: 'Unknown action: ' + action };
+    // Check if this is a write operation (has data param)
+    if (e.parameter.data) {
+      const data = JSON.parse(e.parameter.data);
+      switch (action) {
+        case 'addExpense':
+          result = addExpenseAPI(data);
+          break;
+        case 'addStock':
+          result = addStockAPI(data);
+          break;
+        case 'addSIP':
+          result = addSIPAPI(data);
+          break;
+        case 'addMultipleExpenses':
+          result = addMultipleExpensesAPI(data.expenses);
+          break;
+        default:
+          result = { error: 'Unknown write action: ' + action };
+      }
+    } else {
+      // Read operations
+      switch (action) {
+        case 'getExpenses':
+          result = getRecentExpenses(e.parameter.days || 7);
+          break;
+        case 'getSummary':
+          result = getDailySummary();
+          break;
+        case 'getCategories':
+          result = { categories: CONFIG.categories, paymentModes: CONFIG.paymentModes };
+          break;
+        case 'getStocks':
+          result = getStockPortfolio();
+          break;
+        case 'getSIPs':
+          result = getSIPData();
+          break;
+        default:
+          result = { error: 'Unknown action: ' + action };
+      }
     }
     
     return ContentService.createTextOutput(JSON.stringify(result))
@@ -138,22 +161,32 @@ function addMultipleExpensesAPI(expenses) {
 function addStockAPI(data) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(CONFIG.sheets.stocks);
-  const lastRow = sheet.getLastRow() + 1;
   
-  sheet.getRange(lastRow, 1).setValue(data.name);
-  sheet.getRange(lastRow, 2).setValue(data.symbol.toUpperCase());
-  sheet.getRange(lastRow, 3).setValue(data.sector || '');
-  sheet.getRange(lastRow, 4).setValue(new Date(data.buyDate));
-  sheet.getRange(lastRow, 5).setValue(parseInt(data.qty));
-  sheet.getRange(lastRow, 6).setValue(parseFloat(data.price));
-  sheet.getRange(lastRow, 7).setFormula(`=IF(E${lastRow}="","",E${lastRow}*F${lastRow})`);
-  sheet.getRange(lastRow, 8).setFormula(`=IF(B${lastRow}="","",GOOGLEFINANCE("NSE:"&B${lastRow},"price"))`);
-  sheet.getRange(lastRow, 9).setFormula(`=IF(E${lastRow}="","",E${lastRow}*H${lastRow})`);
-  sheet.getRange(lastRow, 10).setFormula(`=IF(G${lastRow}="","",I${lastRow}-G${lastRow})`);
-  sheet.getRange(lastRow, 11).setFormula(`=IF(G${lastRow}=0,"",J${lastRow}/G${lastRow}*100)`);
-  sheet.getRange(lastRow, 12).setFormula(`=IF(B${lastRow}="","",GOOGLEFINANCE("NSE:"&B${lastRow},"changepct"))`);
-  sheet.getRange(lastRow, 13).setValue('Holding');
-  sheet.getRange(lastRow, 14).setValue(data.notes || '');
+  // Find the PORTFOLIO TOTAL row and insert before it
+  const dataRange = sheet.getDataRange().getValues();
+  let insertRow = sheet.getLastRow() + 1;
+  for (let i = 0; i < dataRange.length; i++) {
+    if (dataRange[i][0] === 'PORTFOLIO TOTAL') {
+      insertRow = i + 1; // Insert before TOTAL row
+      sheet.insertRowBefore(insertRow);
+      break;
+    }
+  }
+  
+  sheet.getRange(insertRow, 1).setValue(data.name);
+  sheet.getRange(insertRow, 2).setValue(data.symbol.toUpperCase());
+  sheet.getRange(insertRow, 3).setValue(data.sector || '');
+  sheet.getRange(insertRow, 4).setValue(new Date(data.buyDate));
+  sheet.getRange(insertRow, 5).setValue(parseInt(data.qty));
+  sheet.getRange(insertRow, 6).setValue(parseFloat(data.price));
+  sheet.getRange(insertRow, 7).setFormula(`=IF(E${insertRow}="","",E${insertRow}*F${insertRow})`);
+  sheet.getRange(insertRow, 8).setFormula(`=IF(B${insertRow}="","",GOOGLEFINANCE("NSE:"&B${insertRow},"price"))`);
+  sheet.getRange(insertRow, 9).setFormula(`=IF(E${insertRow}="","",E${insertRow}*H${insertRow})`);
+  sheet.getRange(insertRow, 10).setFormula(`=IF(G${insertRow}="","",I${insertRow}-G${insertRow})`);
+  sheet.getRange(insertRow, 11).setFormula(`=IF(G${insertRow}=0,"",J${insertRow}/G${insertRow}*100)`);
+  sheet.getRange(insertRow, 12).setFormula(`=IF(B${insertRow}="","",GOOGLEFINANCE("NSE:"&B${insertRow},"changepct"))`);
+  sheet.getRange(insertRow, 13).setValue('Holding');
+  sheet.getRange(insertRow, 14).setValue(data.notes || '');
   
   return { success: true, message: `Stock ${data.symbol} added` };
 }
@@ -161,22 +194,32 @@ function addStockAPI(data) {
 function addSIPAPI(data) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(CONFIG.sheets.sip);
-  const lastRow = sheet.getLastRow() + 1;
   
-  sheet.getRange(lastRow, 1).setValue(data.fundName);
-  sheet.getRange(lastRow, 2).setValue(data.amc || '');
-  sheet.getRange(lastRow, 3).setValue(data.folio || '');
-  sheet.getRange(lastRow, 4).setValue(data.sipDate);
-  sheet.getRange(lastRow, 5).setValue(parseFloat(data.monthlyAmount));
-  sheet.getRange(lastRow, 6).setValue(data.startDate);
-  sheet.getRange(lastRow, 7).setValue(parseInt(data.totalMonths) || 0);
-  sheet.getRange(lastRow, 8).setValue(parseFloat(data.units) || 0);
-  sheet.getRange(lastRow, 9).setValue(parseFloat(data.nav) || 0);
-  sheet.getRange(lastRow, 10).setFormula(`=IF(H${lastRow}="","",H${lastRow}*I${lastRow})`);
-  sheet.getRange(lastRow, 11).setFormula(`=IF(E${lastRow}="","",E${lastRow}*G${lastRow})`);
-  sheet.getRange(lastRow, 12).setFormula(`=IF(J${lastRow}="","",J${lastRow}-K${lastRow})`);
-  sheet.getRange(lastRow, 13).setFormula(`=IF(K${lastRow}=0,"",L${lastRow}/K${lastRow}*100)`);
-  sheet.getRange(lastRow, 14).setValue('Active');
+  // Find the TOTAL row and insert before it
+  const dataRange = sheet.getDataRange().getValues();
+  let insertRow = sheet.getLastRow() + 1;
+  for (let i = 0; i < dataRange.length; i++) {
+    if (dataRange[i][0] === 'TOTAL') {
+      insertRow = i + 1; // Insert before TOTAL row
+      sheet.insertRowBefore(insertRow);
+      break;
+    }
+  }
+  
+  sheet.getRange(insertRow, 1).setValue(data.fundName);
+  sheet.getRange(insertRow, 2).setValue(data.amc || '');
+  sheet.getRange(insertRow, 3).setValue(data.folio || '');
+  sheet.getRange(insertRow, 4).setValue(data.sipDate);
+  sheet.getRange(insertRow, 5).setValue(parseFloat(data.monthlyAmount));
+  sheet.getRange(insertRow, 6).setValue(data.startDate);
+  sheet.getRange(insertRow, 7).setValue(parseInt(data.totalMonths) || 0);
+  sheet.getRange(insertRow, 8).setValue(parseFloat(data.units) || 0);
+  sheet.getRange(insertRow, 9).setValue(parseFloat(data.nav) || 0);
+  sheet.getRange(insertRow, 10).setFormula(`=IF(H${insertRow}="","",H${insertRow}*I${insertRow})`);
+  sheet.getRange(insertRow, 11).setFormula(`=IF(E${insertRow}="","",E${insertRow}*G${insertRow})`);
+  sheet.getRange(insertRow, 12).setFormula(`=IF(J${insertRow}="","",J${insertRow}-K${insertRow})`);
+  sheet.getRange(insertRow, 13).setFormula(`=IF(K${insertRow}=0,"",L${insertRow}/K${insertRow}*100)`);
+  sheet.getRange(insertRow, 14).setValue('Active');
   
   return { success: true, message: `SIP ${data.fundName} added` };
 }
