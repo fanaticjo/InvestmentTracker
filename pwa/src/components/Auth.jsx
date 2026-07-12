@@ -39,7 +39,9 @@ function Auth({ onLogin, children }) {
     window.google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
       callback: handleCredentialResponse,
-      auto_select: true, // Auto sign-in if previously signed in
+      auto_select: true,
+      login_uri: undefined,
+      allowed_parent_origin: undefined,
     });
 
     window.google.accounts.id.renderButton(
@@ -63,6 +65,16 @@ function Auth({ onLogin, children }) {
     
     // Decode JWT to get user info (no verification needed client-side)
     const payload = JSON.parse(atob(token.split('.')[1]));
+    
+    // Check if email is allowed
+    const allowedEmails = ['mohapatrabiswajit744@gmail.com'];
+    if (!allowedEmails.includes(payload.email.toLowerCase())) {
+      alert('⛔ Access denied. This app is private.\n\nOnly authorized accounts can use this tracker.');
+      if (window.google) {
+        window.google.accounts.id.disableAutoSelect();
+      }
+      return;
+    }
     
     const userData = {
       name: payload.name,
